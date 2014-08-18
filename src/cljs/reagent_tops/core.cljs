@@ -27,16 +27,18 @@
 
 (def words (atom []))
 (def input (atom ""))
-(def invalid (atom {}))
 
-(js/setInterval
-  (fn []
-    (swap! invalid select-keys (map first @words))
-    (edn-xhr
-      {:method :get
-       :url "word"
-       :on-complete #(swap! words (fn [x] (conj (vec (take-last 9 x)) [% :server])))}))
-        1000)
+(defn init [interval]
+  (js/setInterval
+    (fn []
+      (edn-xhr
+        {:method :get
+         :url "word"
+         :on-complete #(swap! words
+                         (fn [x]
+                           (conj (vec (take-last 9 x))
+                             {:word % :origin :server})))}))
+    interval))
 
 (defn submit-word [word]
   (edn-xhr
@@ -45,26 +47,43 @@
      :data {:word word}
      :on-complete
      (fn [res]
-       (if (= :ok res)
-         (println "server response:" res)
-         (swap! invalid merge res)))}))
+       (when-not (= :ok res)
+         (swap! words #(mapv (fn [x]
+                               (if (= res (:word x))
+                                 (assoc x :invalid true)
+                                 x))
+                         %))))}))
 
-(defn simple-component []
+(defn input-word []
+  [:div
+   [:input
+    {:value @input
+     :type "text"
+     :on-change #(reset! input (-> % .-target .-value))}]
+   [:button
+    {:on-click #(do
+                  (submit-word @input)
+                  (swap! words
+                    (fn [x]
+                      (conj (vec (take-last 9 x))
+                        {:word @input
+                         :origin :local})))
+                  (reset! input ""))}
+    "Submit"]])
+
+(defn word-view [{:keys [word origin invalid]}]
+  [:p {:class (str (when (= origin :local) "local")
+                (when invalid " invalid"))}
+   word])
+
+(defn tops-component []
   [:div
    [:h1 "Reagent Tops"]
-   [:input {:value @input
-            :type "text"
-            :on-change #(reset! input (-> % .-target .-value))}]
-   [:button {:on-click #(do
-                          (submit-word @input)
-                          (swap! words (fn [x] (conj (vec (take-last 9 x)) [@input :local])))
-                          (reset! input ""))}
-    "Submit"]
+   [input-word]
    [:div
-    (doall
-      (for [[w o] (reverse @words)]
-        [:p {:class (str (when (= o :local) "local")
-                      (when (@invalid w) " invalid"))}
-         w]))]])
+    (for [word (reverse @words)]
+      [word-view word])]])
 
-(reagent/render-component [simple-component] (.-body js/document))
+(reagent/render-component [tops-component] (.-body js/document))
+
+(init 1000)
