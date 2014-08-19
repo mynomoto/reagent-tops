@@ -1,6 +1,7 @@
 /target
 /classes
 /resources/public/js/out
+/resources/public/js/main.js
 /checkouts
 /.lein-*
 /.nrepl-port
