@@ -1,6 +1,7 @@
 (ns reagent-tops.core
   (:require
     [reagent.core :as reagent :refer [atom]]
+    [clojure.string :as str]
     [cljs.reader :as reader]
     [goog.events :as events])
   (:import
@@ -34,10 +35,11 @@
       (edn-xhr
         {:method :get
          :url "word"
-         :on-complete #(swap! words
-                         (fn [x]
-                           (conj (vec (take-last 9 x))
-                             {:word % :origin :server})))}))
+         :on-complete #(when-not (str/blank? %)
+                         (swap! words
+                           (fn [x]
+                             (conj (vec (take-last 9 x))
+                               {:word % :origin :server}))))}))
     interval))
 
 (defn submit-word [word]
@@ -67,13 +69,14 @@
    [:span.input-group-btn
     [:button.btn.btn-primary
      {:on-click #(do
-                   (submit-word @input)
-                   (swap! words
-                     (fn [x]
-                       (conj (vec (take-last 9 x))
-                         {:word @input
-                          :origin :local})))
-                   (reset! input ""))}
+                   (when-not (str/blank? @input)
+                     (submit-word @input)
+                     (swap! words
+                       (fn [x]
+                         (conj (vec (take-last 9 x))
+                           {:word @input
+                            :origin :local})))
+                     (reset! input "")))}
      "Submit"]]])
 
 (defn word-view [{:keys [word origin invalid valid]}]
