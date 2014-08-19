@@ -47,43 +47,55 @@
      :data {:word word}
      :on-complete
      (fn [res]
-       (when-not (= :ok res)
-         (swap! words #(mapv (fn [x]
-                               (if (= res (:word x))
-                                 (assoc x :invalid true)
-                                 x))
-                         %))))}))
+       (swap! words #(mapv (fn [x]
+                             (cond
+                               (= (:invalid res) (:word x))
+                               (assoc x :invalid true)
+
+                               (= (:valid res) (:word x))
+                               (assoc x :valid true)
+
+                               :else x))
+                       %)))}))
 
 (defn input-word []
-  [:div
-   [:input
+  [:div.input-group
+   [:input.form-control
     {:value @input
      :type "text"
      :on-change #(reset! input (-> % .-target .-value))}]
-   [:button
-    {:on-click #(do
-                  (submit-word @input)
-                  (swap! words
-                    (fn [x]
-                      (conj (vec (take-last 9 x))
-                        {:word @input
-                         :origin :local})))
-                  (reset! input ""))}
-    "Submit"]])
+   [:span.input-group-btn
+    [:button.btn.btn-primary
+     {:on-click #(do
+                   (submit-word @input)
+                   (swap! words
+                     (fn [x]
+                       (conj (vec (take-last 9 x))
+                         {:word @input
+                          :origin :local})))
+                   (reset! input ""))}
+     "Submit"]]])
 
-(defn word-view [{:keys [word origin invalid]}]
-  [:p {:class (str (when (= origin :local) "local")
-                (when invalid " invalid"))}
+(defn word-view [{:keys [word origin invalid valid]}]
+  [:li.list-group-item
+   {:class (str
+             (when (and (= origin :local) (not invalid) (not valid))
+               "list-group-item-warning")
+             (when (and (= origin :local) valid)
+               " list-group-item-success")
+             (when invalid " invalid list-group-item-danger"))}
    word])
 
 (defn tops-component []
-  [:div
-   [:h1 "Reagent Tops"]
-   [input-word]
-   [:div
-    (for [word (reverse @words)]
-      [word-view word])]])
+  [:div.row
+   [:div.col-lg-4.col-md-5.col-sm-6
+    [:h1 "Reagent Tops"]
+    [input-word]
+    [:ul.list-group
+     (for [word (reverse @words)]
+       [word-view word])]]])
 
-(reagent/render-component [tops-component] (.-body js/document))
+(reagent/render-component [tops-component] (js/document.getElementById "tops"))
+#_(.-body js/document)
 
 (init 1000)
