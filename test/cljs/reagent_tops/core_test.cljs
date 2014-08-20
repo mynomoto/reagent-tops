@@ -41,13 +41,6 @@
         (reagent/unmount-component-at-node div)
         (reagent/flush)))))
 
-(defn found-in [re div]
-  (let [res (.-innerHTML div)]
-    (if (re-find re res)
-      true
-      (do (println "Not found: " res)
-          false))))
-
 (defspec server-word-view runs
   (prop/for-all [w (gen/hash-map :word gen/string-ascii)]
     (when isClient
