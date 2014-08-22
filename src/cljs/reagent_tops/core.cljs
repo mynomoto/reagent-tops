@@ -11,8 +11,6 @@
 
 (enable-console-print!)
 
-(def state (atom []))
-
 (def ^:private meths
   {:get "GET"
    :put "PUT"
@@ -28,18 +26,20 @@
       (send url (meths method) (when data (pr-str data))
         #js {"Content-Type" "application/edn"}))))
 
+(def state (atom []))
+
+(defn update-state []
+  (edn-xhr
+    {:method :get
+     :url "word"
+     :on-complete #(when-not (str/blank? %)
+                     (swap! state
+                       (fn [x]
+                         (conj (vec (take-last 9 x))
+                           {:word % :origin :server}))))}))
+
 (defn init [interval]
-  (js/setInterval
-    (fn []
-      (edn-xhr
-        {:method :get
-         :url "word"
-         :on-complete #(when-not (str/blank? %)
-                         (swap! state
-                           (fn [x]
-                             (conj (vec (take-last 9 x))
-                               {:word % :origin :server}))))}))
-    interval))
+  (js/setInterval update-state interval))
 
 (defn submit-word [word]
   (edn-xhr
@@ -104,4 +104,5 @@
 
 (when (js/document.getElementById "tops")
   (reagent/render-component [tops-component] (js/document.getElementById "tops"))
+  (update-state)
   (init 1000))
