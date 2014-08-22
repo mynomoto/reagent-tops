@@ -16,7 +16,7 @@
     [dommy.core :as dommy]
     [reagent.core :as reagent :refer [atom]]
     [reagent.ratom :as rv]
-    [reagent-tops.core :refer [tops-component word-view input-word submit-word word-list words-state]]))
+    [reagent-tops.core :refer [tops-component word-item word-input word-list state]]))
 
 (def runs 100)
 
@@ -41,10 +41,10 @@
         (reagent/unmount-component-at-node div)
         (reagent/flush)))))
 
-(defspec server-word-view runs
+(defspec server-word-item runs
   (prop/for-all [w (gen/hash-map :word gen/string-ascii)]
     (when isClient
-      (with-mounted-component [word-view (assoc w :origin :server)]
+      (with-mounted-component [word-item (assoc w :origin :server)]
         (fn [c div]
           (let [el (.-firstChild div)]
             (is (= 1 (.-childElementCount div)))
@@ -56,10 +56,10 @@
             (is (not (dommy/has-class? el "invalid"))))))
       true)))
 
-(defspec local-word-view runs
+(defspec local-word-item runs
   (prop/for-all [w (gen/hash-map :word gen/string-ascii)]
     (when isClient
-      (with-mounted-component [word-view (assoc w :origin :local)]
+      (with-mounted-component [word-item (assoc w :origin :local)]
         (fn [c div]
           (let [el (.-firstChild div)]
             (is (= 1 (.-childElementCount div)))
@@ -71,10 +71,10 @@
             (is (not (dommy/has-class? el "invalid"))))))
       true)))
 
-(defspec local-word-view-valid runs
+(defspec local-word-item-valid runs
   (prop/for-all [w (gen/hash-map :word gen/string-ascii)]
     (when isClient
-      (with-mounted-component [word-view (assoc w
+      (with-mounted-component [word-item (assoc w
                                            :origin :local
                                            :valid true)]
         (fn [c div]
@@ -88,10 +88,10 @@
             (is (not (dommy/has-class? el "invalid"))))))
       true)))
 
-(defspec local-word-view-invalid runs
+(defspec local-word-item-invalid runs
   (prop/for-all [w (gen/hash-map :word gen/string-ascii)]
     (when isClient
-      (with-mounted-component [word-view (assoc w
+      (with-mounted-component [word-item (assoc w
                                            :origin :local
                                            :invalid true)]
         (fn [c div]
@@ -119,7 +119,7 @@
 
 (deftest tops-component-test
   (when isClient
-    (let [_ (reset! words-state [{:word "blabla" :origin :server}
+    (let [_ (reset! state [{:word "blabla" :origin :server}
                                  {:word "bleble" :origin :server}])]
       (with-mounted-component [tops-component]
         (fn [c div]

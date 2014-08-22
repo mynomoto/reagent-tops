@@ -11,7 +11,7 @@
 
 (enable-console-print!)
 
-(def words-state (atom []))
+(def state (atom []))
 
 (def ^:private meths
   {:get "GET"
@@ -35,7 +35,7 @@
         {:method :get
          :url "word"
          :on-complete #(when-not (str/blank? %)
-                         (swap! words-state
+                         (swap! state
                            (fn [x]
                              (conj (vec (take-last 9 x))
                                {:word % :origin :server}))))}))
@@ -48,7 +48,7 @@
      :data {:word word}
      :on-complete
      (fn [res]
-       (swap! words-state #(mapv (fn [x]
+       (swap! state #(mapv (fn [x]
                              (cond
                                (= (:invalid res) (:word x))
                                (assoc x :invalid true)
@@ -59,28 +59,7 @@
                                :else x))
                        %)))}))
 
-(defn input-word []
-  (let [input (atom "")]
-    (fn []
-      [:div.input-group
-       [:input.form-control
-        {:value @input
-         :type "text"
-         :on-change #(reset! input (-> % .-target .-value))}]
-       [:span.input-group-btn
-        [:button.btn.btn-primary
-         {:on-click #(do
-                       (when-not (str/blank? @input)
-                         (submit-word @input)
-                         (swap! words-state
-                           (fn [x]
-                             (conj (vec (take-last 9 x))
-                               {:word @input
-                                :origin :local})))
-                         (reset! input "")))}
-         "Submit"]]])))
-
-(defn word-view [{:keys [word origin invalid valid]}]
+(defn word-item [{:keys [word origin invalid valid]}]
   [:li.list-group-item
    {:class (str
              (when (and (= origin :local) (not invalid) (not valid))
@@ -93,14 +72,35 @@
 (defn word-list [words]
   [:ul.list-group
    (for [word (reverse words)]
-     [word-view word])])
+     [word-item word])])
+
+(defn word-input []
+  (let [input (atom "")]
+    (fn []
+      [:div.input-group
+       [:input.form-control
+        {:value @input
+         :type "text"
+         :on-change #(reset! input (-> % .-target .-value))}]
+       [:span.input-group-btn
+        [:button.btn.btn-primary
+         {:on-click #(do
+                       (when-not (str/blank? @input)
+                         (submit-word @input)
+                         (swap! state
+                           (fn [x]
+                             (conj (vec (take-last 9 x))
+                               {:word @input
+                                :origin :local})))
+                         (reset! input "")))}
+         "Submit"]]])))
 
 (defn tops-component []
   [:div.row
    [:div.col-lg-4.col-md-5.col-sm-6
     [:h1 "Reagent Tops"]
-    [input-word]
-    [word-list @words-state]]])
+    [word-input]
+    [word-list @state]]])
 
 (when (js/document.getElementById "tops")
   (reagent/render-component [tops-component] (js/document.getElementById "tops"))
