@@ -2,6 +2,7 @@
 /classes
 /resources/public/js/out
 /resources/public/js/main.js
+/resources/public/js/main-prod.js
 /checkouts
 /.lein-*
 /.nrepl-port
