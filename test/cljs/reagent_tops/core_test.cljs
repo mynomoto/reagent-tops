@@ -96,24 +96,40 @@
           (is (dommy/has-class? el "list-group"))
           (is (= (str/join (map :word (reverse w))) (dommy/text el))))))))
 
-(deftest tops-component-test
-  (let [_ (reset! t/state [{:word "blabla" :origin :server}
-                           {:word "bleble" :origin :server}])]
-    (with-mounted-component [t/tops-component]
-      (fn [c div]
-        (let [elp (.-firstChild div)
-              elc (.-firstChild elp)
-              h (aget (.-childNodes elc) 0)
-              wl (aget (.-childNodes elc) 2)]
-          (is (= 1 (.-childElementCount div)))
-          (is (= 1 (.-childElementCount elp)))
-          (is (= 3 (.-childElementCount elc)))
-          (is (= 3 (-> elc .-childNodes .-length)))
-          (is (dommy/has-class? elp "row"))
-          (is (dommy/has-class? elc "col-lg-4"))
-          (is (dommy/has-class? elc "col-md-5"))
-          (is (dommy/has-class? elc "col-sm-6"))
-          (is (= "Reagent Tops" (dommy/text h)))
-          (is (= 2 (.-childElementCount wl)))
-          (is (dommy/has-class? wl "list-group"))
-          (is (= (str/join (map :word (reverse @t/state))) (dommy/text wl))))))))
+(deftest word-input-test
+  (with-mounted-component [t/word-input]
+    (fn [c div]
+      (let [el (.-firstChild div)
+            in (.-firstChild el)
+            sp (aget (.-childNodes el) 1)
+            bt (.-firstChild sp)]
+        (is (dommy/has-class? el "input-group"))
+        (is (= 2 (.-childElementCount el)))
+        (is (dommy/has-class? in "form-control"))
+        (is (= "" (.-value in)))
+        (is (= 1 (.-childElementCount sp)))
+        (is (dommy/has-class? sp "input-group-btn"))
+        (is (dommy/has-class? bt "btn"))
+        (is (dommy/has-class? bt "btn-primary"))
+        (is (= (dommy/text bt) "Submit"))))))
+
+(defspec tops-component-test runs
+  (prop/for-all [w (gen/vector (gen/hash-map :word gen/string-ascii) 0 10)]
+    (let [_ (reset! t/state w)]
+      (with-mounted-component [t/tops-component]
+        (fn [c div]
+          (let [elp (.-firstChild div)
+                elc (.-firstChild elp)
+                h (aget (.-childNodes elc) 0)
+                wl (aget (.-childNodes elc) 2)]
+            (is (= 1 (.-childElementCount div)))
+            (is (= 1 (.-childElementCount elp)))
+            (is (= 3 (.-childElementCount elc)))
+            (is (dommy/has-class? elp "row"))
+            (is (dommy/has-class? elc "col-lg-4"))
+            (is (dommy/has-class? elc "col-md-5"))
+            (is (dommy/has-class? elc "col-sm-6"))
+            (is (= "Reagent Tops" (dommy/text h)))
+            (is (= (count w) (.-childElementCount wl)))
+            (is (dommy/has-class? wl "list-group"))
+            (is (= (str/join (map :word (reverse @t/state))) (dommy/text wl)))))))))
