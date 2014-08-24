@@ -23,13 +23,6 @@
     (dommy/append! (.-body js/document) div)
     div))
 
-(defn with-mounted-component [comp f]
-  (let [div (new-container!)]
-    (let [comp (reagent/render-component comp div #(f comp div))]
-      (reagent/unmount-component-at-node div)
-      (reagent/flush)
-      true)))
-
 (defspec server-word-item runs
   (prop/for-all [w (gen/hash-map :word gen/string-ascii)]
     (let [div (new-container!)
@@ -103,21 +96,21 @@
         (= (str/join (map :word (reverse w))) (dommy/text el))))))
 
 (deftest word-input-test
-  (with-mounted-component [t/word-input]
-    (fn [c div]
-      (let [el (.-firstChild div)
-            in (.-firstChild el)
-            sp (aget (.-childNodes el) 1)
-            bt (.-firstChild sp)]
-        (is (dommy/has-class? el "input-group"))
-        (is (= 2 (.-childElementCount el)))
-        (is (dommy/has-class? in "form-control"))
-        (is (= "" (.-value in)))
-        (is (= 1 (.-childElementCount sp)))
-        (is (dommy/has-class? sp "input-group-btn"))
-        (is (dommy/has-class? bt "btn"))
-        (is (dommy/has-class? bt "btn-primary"))
-        (is (= (dommy/text bt) "Submit"))))))
+  (let [div (new-container!)
+        _ (reagent/render-component [t/word-input] div)
+        el (.-firstChild div)
+        in (.-firstChild el)
+        sp (aget (.-childNodes el) 1)
+        bt (.-firstChild sp)]
+    (is (dommy/has-class? el "input-group"))
+    (is (= 2 (.-childElementCount el)))
+    (is (dommy/has-class? in "form-control"))
+    (is (= "" (.-value in)))
+    (is (= 1 (.-childElementCount sp)))
+    (is (dommy/has-class? sp "input-group-btn"))
+    (is (dommy/has-class? bt "btn"))
+    (is (dommy/has-class? bt "btn-primary"))
+    (is (= (dommy/text bt) "Submit"))))
 
 (defspec tops-component-test runs
   (prop/for-all [w (gen/vector (gen/hash-map :word gen/string-ascii) 0 10)]
