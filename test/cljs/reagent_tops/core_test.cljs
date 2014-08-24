@@ -32,69 +32,75 @@
 
 (defspec server-word-item runs
   (prop/for-all [w (gen/hash-map :word gen/string-ascii)]
-    (with-mounted-component [t/word-item (assoc w :origin :server)]
-      (fn [c div]
-        (let [el (.-firstChild div)]
-          (is (= 1 (.-childElementCount div)))
-          (is (= (:word w) (dommy/text el)))
-          (is (dommy/has-class? el "list-group-item"))
-          (is (not (dommy/has-class? el "list-group-item-warning")))
-          (is (not (dommy/has-class? el "list-group-item-success")))
-          (is (not (dommy/has-class? el "list-group-item-danger")))
-          (is (not (dommy/has-class? el "invalid"))))))))
+    (let [div (new-container!)
+          _ (reagent/render-component
+              [t/word-item (assoc w :origin :server)] div)
+          el (.-firstChild div)]
+      (and
+        (= 1 (.-childElementCount div))
+        (= (:word w) (dommy/text el))
+        (dommy/has-class? el "list-group-item")
+        (not (dommy/has-class? el "list-group-item-warning"))
+        (not (dommy/has-class? el "list-group-item-success"))
+        (not (dommy/has-class? el "list-group-item-danger"))
+        (not (dommy/has-class? el "invalid"))))))
 
 (defspec local-word-item runs
   (prop/for-all [w (gen/hash-map :word gen/string-ascii)]
-    (with-mounted-component [t/word-item (assoc w :origin :local)]
-      (fn [c div]
-        (let [el (.-firstChild div)]
-          (is (= 1 (.-childElementCount div)))
-          (is (= (:word w) (dommy/text el)))
-          (is (dommy/has-class? el "list-group-item"))
-          (is (dommy/has-class? el "list-group-item-warning"))
-          (is (not (dommy/has-class? el "list-group-item-success")))
-          (is (not (dommy/has-class? el "list-group-item-danger")))
-          (is (not (dommy/has-class? el "invalid"))))))))
+    (let [div (new-container!)
+          _ (reagent/render-component
+              [t/word-item (assoc w :origin :local)] div)
+          el (.-firstChild div)]
+      (and
+        (= 1 (.-childElementCount div))
+        (= (:word w) (dommy/text el))
+        (dommy/has-class? el "list-group-item")
+        (dommy/has-class? el "list-group-item-warning")
+        (not (dommy/has-class? el "list-group-item-success"))
+        (not (dommy/has-class? el "list-group-item-danger"))
+        (not (dommy/has-class? el "invalid"))))))
 
 (defspec local-word-item-valid runs
   (prop/for-all [w (gen/hash-map :word gen/string-ascii)]
-    (with-mounted-component [t/word-item (assoc w
-                                         :origin :local
-                                         :valid true)]
-      (fn [c div]
-        (let [el (.-firstChild div)]
-          (is (= 1 (.-childElementCount div)))
-          (is (= (:word w) (dommy/text el)))
-          (is (dommy/has-class? el "list-group-item"))
-          (is (not (dommy/has-class? el "list-group-item-warning")))
-          (is (dommy/has-class? el "list-group-item-success"))
-          (is (not (dommy/has-class? el "list-group-item-danger")))
-          (is (not (dommy/has-class? el "invalid"))))))))
+    (let [div (new-container!)
+          _ (reagent/render-component
+              [t/word-item (assoc w :origin :local :valid true)] div)
+          el (.-firstChild div)]
+      (and
+        (= 1 (.-childElementCount div))
+        (= (:word w) (dommy/text el))
+        (dommy/has-class? el "list-group-item")
+        (not (dommy/has-class? el "list-group-item-warning"))
+        (dommy/has-class? el "list-group-item-success")
+        (not (dommy/has-class? el "list-group-item-danger"))
+        (not (dommy/has-class? el "invalid"))))))
 
 (defspec local-word-item-invalid runs
   (prop/for-all [w (gen/hash-map :word gen/string-ascii)]
-    (with-mounted-component [t/word-item (assoc w
-                                         :origin :local
-                                         :invalid true)]
-      (fn [c div]
-        (let [el (.-firstChild div)]
-          (is (= 1 (.-childElementCount div)))
-          (is (= (:word w) (dommy/text el)))
-          (is (dommy/has-class? el "list-group-item"))
-          (is (not (dommy/has-class? el "list-group-item-warning")))
-          (is (not (dommy/has-class? el "list-group-item-success")))
-          (is (dommy/has-class? el "list-group-item-danger"))
-          (is (dommy/has-class? el "invalid")))))))
+    (let [div (new-container!)
+          _ (reagent/render-component
+              [t/word-item (assoc w :origin :local :invalid true)] div)
+          el (.-firstChild div)]
+      (and
+        (= 1 (.-childElementCount div))
+        (= (:word w) (dommy/text el))
+        (dommy/has-class? el "list-group-item")
+        (not (dommy/has-class? el "list-group-item-warning"))
+        (not (dommy/has-class? el "list-group-item-success"))
+        (dommy/has-class? el "list-group-item-danger")
+        (dommy/has-class? el "invalid")))))
 
 (defspec word-list-test runs
   (prop/for-all [w (gen/vector (gen/hash-map :word gen/string-ascii) 0 10)]
-    (with-mounted-component [t/word-list (map #(assoc % :origin :server) w)]
-      (fn [c div]
-        (let [el (.-firstChild div)]
-          (is (= 1 (.-childElementCount div)))
-          (is (= (count w) (.-childElementCount el)))
-          (is (dommy/has-class? el "list-group"))
-          (is (= (str/join (map :word (reverse w))) (dommy/text el))))))))
+    (let [div (new-container!)
+          _ (reagent/render-component
+              [t/word-list (map #(assoc % :origin :server) w)] div)
+          el (.-firstChild div)]
+      (and
+        (= 1 (.-childElementCount div))
+        (= (count w) (.-childElementCount el))
+        (dommy/has-class? el "list-group")
+        (= (str/join (map :word (reverse w))) (dommy/text el))))))
 
 (deftest word-input-test
   (with-mounted-component [t/word-input]
@@ -115,21 +121,23 @@
 
 (defspec tops-component-test runs
   (prop/for-all [w (gen/vector (gen/hash-map :word gen/string-ascii) 0 10)]
-    (let [_ (reset! t/state w)]
-      (with-mounted-component [t/tops-component]
-        (fn [c div]
-          (let [elp (.-firstChild div)
-                elc (.-firstChild elp)
-                h (aget (.-childNodes elc) 0)
-                wl (aget (.-childNodes elc) 2)]
-            (is (= 1 (.-childElementCount div)))
-            (is (= 1 (.-childElementCount elp)))
-            (is (= 3 (.-childElementCount elc)))
-            (is (dommy/has-class? elp "row"))
-            (is (dommy/has-class? elc "col-lg-4"))
-            (is (dommy/has-class? elc "col-md-5"))
-            (is (dommy/has-class? elc "col-sm-6"))
-            (is (= "Reagent Tops" (dommy/text h)))
-            (is (= (count w) (.-childElementCount wl)))
-            (is (dommy/has-class? wl "list-group"))
-            (is (= (str/join (map :word (reverse @t/state))) (dommy/text wl)))))))))
+    (let [_ (reset! t/state w)
+          div (new-container!)
+          _ (reagent/render-component
+              [t/tops-component] div)
+          elp (.-firstChild div)
+          elc (.-firstChild elp)
+          h (aget (.-childNodes elc) 0)
+          wl (aget (.-childNodes elc) 2)]
+      (and
+        (= 1 (.-childElementCount div))
+        (= 1 (.-childElementCount elp))
+        (= 3 (.-childElementCount elc))
+        (dommy/has-class? elp "row")
+        (dommy/has-class? elc "col-lg-4")
+        (dommy/has-class? elc "col-md-5")
+        (dommy/has-class? elc "col-sm-6")
+        (= "Reagent Tops" (dommy/text h))
+        (= (count w) (.-childElementCount wl))
+        (dommy/has-class? wl "list-group")
+        (= (str/join (map :word (reverse @t/state))) (dommy/text wl))))))
